@@ -24,6 +24,7 @@ calculator_button_text = {
     'delete': u"\u232B"
 }
 
+MSG = "Simple Calculator Implementation\nCreated By David S"
 
 def find_key_from_value(dic, val):
     return list(dic.keys())[list(dic.values()).index(val)]
@@ -37,6 +38,7 @@ class CalculatorApp(tk.Frame):
         self.master = master
         self.buttons = calculator_button_text.copy()
         self.equation = ""
+        self.intro_message(master)
         self.configure_gui()
         self.create_calc_widgets()
         # in order to change the button colors (mac)
@@ -59,6 +61,15 @@ class CalculatorApp(tk.Frame):
         idle_sim.configure('idle_style.TButton', foreground="firebrick", background="darkgrey",
                               font=("Arial", 20, "bold", "italic"))
 
+    def intro_message(self, root):
+        top = tk.Toplevel(root, width=500, height=200)
+        top.title('Message')
+        m = tk.Message(top, text=MSG, anchor='center', aspect=1000,
+                       font=("Arial", 20, "bold", "italic"))
+        m.pack()
+        top.attributes('-topmost', 'true')
+        top.after(1500, top.destroy)
+
     def configure_gui(self):
         self.master.title("Calculator")
         self.master.configure(bg='black')
@@ -68,7 +79,7 @@ class CalculatorApp(tk.Frame):
         self.create_buttons()
 
     def create_input_field(self):
-        self.screen = tk.Text(self.master, height=5, width=30)
+        self.screen = tk.Text(self.master, height=5, width=30, state='disabled')
         self.screen.grid(row=0, column=0, columnspan=4, sticky='nswe')
         self.scroll_bar = ttk.Scrollbar(self.master, command=self.screen.yview)
         self.scroll_bar.grid(row=0, column=3, sticky='nse')
@@ -128,9 +139,13 @@ class CalculatorApp(tk.Frame):
             if (self.equation):
                 self.equation = re.sub(u"\u00F7", '/', self.equation)
                 self.equation = re.sub("x", '*', self.equation)
-                ans = str(eval(self.equation))
-                self.display_on_screen(ans, new_line)
-                self.equation = ""
+                try:
+                    ans = str(eval(self.equation))
+                    self.display_on_screen(ans, new_line)
+                    self.equation = ""
+                except:
+                    self.display_on_screen("Invalid", new_line)
+                    self.after(500, self.clear_screen)
         elif (cmd == 'C'):
             self.clear_screen()
         elif (cmd == u"\u232B"):
@@ -140,24 +155,32 @@ class CalculatorApp(tk.Frame):
 
     def display_on_screen(self, val, new_line=False):
         if (not new_line):
+            self.screen.configure(state='normal')
             self.screen.insert(tk.END, val)
             self.equation += str(val)
+            self.screen.configure(state='disabled')
         else:
+            self.screen.configure(state='normal')
             self.screen.insert(tk.END, '\n')
             self.screen.insert(tk.END, val)
             self.screen.insert(tk.END, '\n')
             self.screen.yview('end')
+            self.screen.configure(state='disabled')
 
     def clear_screen(self):
         # set equation to empty before deleting screen
         self.equation = ""
+        self.screen.configure(state='normal')
         self.screen.delete('1.0', tk.END)
+        self.screen.configure(state='disabled')
 
     def delete_char(self):
         self.equation = self.equation[0:-1]  # delete the last element
+        self.screen.configure(state='normal')
         entire_txt = self.screen.get('1.0', tk.END)[0:-2]
         self.screen.delete('1.0', tk.END)
         self.screen.insert('1.0', entire_txt)
+        self.screen.configure(state='disabled')
 
     # keystroke handling
 
